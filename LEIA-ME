@@ -1,0 +1,3 @@
+os mergulhadores recebem uma quantidade de oxigênio para fazer o mergulho.
+Cada vez que o mergulhador tem sucesso ele ganha oxigênio, caso contrário
+o mergulhador pode "morrer" sem oxigênio.
