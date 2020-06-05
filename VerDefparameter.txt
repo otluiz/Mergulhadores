@@ -1,0 +1,9 @@
+http://www.gigamonkeys.com/book/variables.html
+
+http://www.youtube.com/watch?v=N1oMRw04W3E --> Raytracer in Common Lisp
+
+http://www.youtube.com/watch?v=VeAdryYZ7ak&list=PLakpda32F-TjNfU3QjGSI5T_iTNnNzx62
+
+http://www.youtube.com/watch?v=LhnUlxXBkGU  --> Common Lisp debugging with Slime 
+
+http://www.aiai.ed.ac.uk/~jeff/clos-guide.html --> A Brief Guide to CLOS

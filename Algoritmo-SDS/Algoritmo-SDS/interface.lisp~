@@ -1,0 +1,58 @@
+;;;-------------------------------------------------------------------------
+;;; arquivo: Interface Humano
+;;; Othon Oliveira
+;;; projeto: Algoritmo Mergulhadores
+;;; descrição: Interface para interagir com o utilizador humano
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Carrega os espaços de busca(tabuleiro) de um arquivo para a memoria
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun carrega-tabuleiro (caminho)
+  (with-open-file (fich caminho :direction :input :if-does-not-exist :error)
+    (read fich)
+    )
+  )
+
+(defun ler-fich ()
+  (carrega-tabuleiro "/home/luix/Documentos/IA-Ep_Especial/tabuleiro.txt" )
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Captura o tabuleiro escolhido pelo utilizador
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun enesimo-tabuleiro (a lst)
+  (cond ((= 1 a) (car lst))
+        ((null lst) nil)
+	(t (enesimo-tabuleiro (1- a) (cdr lst))))
+  )
+
+;;*****************************************************************************
+;;; funções que interagem com o humano
+;;*****************************************************************************
+
+;;; Executa a interface com o utilizador
+;;; faz um teste a cada tipo de movimento retornando nil caso seja inválido
+
+(defun interface-Human (no)
+  (let ((pos-x (read (format t "~% =>(coluna): Posição X da origem : ")))
+        (pos-y (read (format t "   =>(linha): Posição Y da origem: "))))
+    (if (and
+	 (numberp pos-x) (numberp pos-y) ;; valida as coordenadas
+	 (coord-valida? pos-x pos-y (car no))
+	 (mergulhador 
+	  (poe-mergulhador pos-x pos-y (car no))
+		    1 ;; id
+		    ;(append no (list 1 (car no)))
+		    (list pos-x pos-y)
+		    ;(* -1 (car (funcall #'f-aval no))) ;; valores para beta negativos
+		    ;;(if (eql (sixth no) 1) 2 1)
+		    )
+		   )
+	(progn
+	  (format t "~%** Movimento inválido **~%")
+	  (interface-Human no))
+	)
+    )
+  )
