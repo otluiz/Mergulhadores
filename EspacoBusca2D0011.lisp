@@ -381,3 +381,38 @@
 ; )
 
 ;;;; -----------------   fim do arquivo  -------------------
+
+;;; Função que move o mergulhador em uma espiral circular
+(defun espiral-circular (x y tab &optional (raio 1) (direcao 'direita) (angulo 0))
+  "Move o mergulhador em espiral circular a partir da posição (x y)"
+  (let ((novo-x x)
+        (novo-y y)
+        (novo-tab tab))
+    (cond
+      ((= angulo 360) ;; Se completou um círculo, incrementa o raio e reinicia o ângulo
+       (espiral-circular novo-x novo-y novo-tab (+ raio 1) 'direita 0))
+      ((> raio (min (length (car tab)) (length tab))) ;; Se o raio é maior que o tabuleiro
+       novo-tab)
+      (t ;; Caso contrário, continua a espiral
+       (progn
+         (setq novo-tab (poe-a x y novo-tab)) ;; Marca a posição atual como visitada
+         ;; Move para a próxima posição dependendo da direção
+         (setq novo-x (case direcao
+                        (direita (+ novo-x 1))
+                        (esquerda (- novo-x 1))
+                        (acima novo-x)
+                        (abaixo novo-x)))
+         (setq novo-y (case direcao
+                        (direita novo-y)
+                        (esquerda novo-y)
+                        (acima (+ novo-y 1))
+                        (abaixo (- novo-y 1))))
+         ;; Atualiza a direção de acordo com o ângulo
+         (cond
+           ((< angulo 90) (setq direcao 'direita))
+           ((< angulo 180) (setq direcao 'acima))
+           ((< angulo 270) (setq direcao 'esquerda))
+           (t (setq direcao 'abaixo)))
+         ;; Chama recursivamente a função com a nova posição e ângulo atualizado
+         (espiral-circular novo-x novo-y novo-tab raio direcao (+ angulo (/ 360.0 (* raio 2))))
+         )))))

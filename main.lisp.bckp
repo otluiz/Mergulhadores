@@ -1,0 +1,121 @@
+;;;-------------------------------------------------------------------------
+;;; arquivo: Interface Humano
+;;; Othon Oliveira
+;;; projeto: Algoritmo Mergulhadores
+;;; descrição: Interface para interagir com o utilizador humano
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Tabuleiros para teste
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun tab1()
+  "Tabuleiro padrão para testes."
+  (list
+   '( * * * * * * )
+   '( * * * * * * )
+   '( * * * * * * )
+   '( * * * * * * )
+   '( * * * * * * )
+   '( * * * * * * )
+   ))
+
+(defun tab2()
+  "Tabuleiro com obstáculos em uma linha."
+  (list
+   '( * * * * * * )
+   '( * * * * * * )
+   '( * * * * * * )
+   '( * 0 * * * * )
+   '( * 0 * * * * )
+   '( * * * * * * )
+   ))
+
+(defun tab3()
+  "Tabuleiro com obstáculos diagonais."
+  (list
+   '( * * * * * 0 * * )
+   '( * * * * 0 0 * * )
+   '( * * * * * 0 0 * )
+   '( * * * * * * * * )
+   '( * * * * * * * * )
+   '( * * * * * * 0 * )
+   '( * * * * * * * 0 )
+   '( * * * * * * * * )
+   ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Função para Imprimir Tabuleiros
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun imprime-tab (tabuleiro &optional (i 1))
+  "Imprime o tabuleiro TABULEIRO de forma formatada."
+  (format t "~%Tabuleiro: ~d" (incf i))
+  (format t "~%--+---+---+---+---+---+---+")
+  (dotimes (x (length tabuleiro)) ;; x até o número de linhas do tabuleiro
+    (format t "~%~A " (- (length tabuleiro) x))
+    (dotimes (y (length (car tabuleiro))) ;; y até o número de colunas do tabuleiro
+      (format t "| ~A " (if (eq (nth y (nth x tabuleiro)) '*) "*" 
+                          (if (eq (nth y (nth x tabuleiro)) 0) "0" " "))))
+    (format t "| ~%--+---+---+---+---+---+---+"))
+  (format t "~%  | 1 | 2 | 3 | 4 | 5 | 6 |~%--+---+---+---+---+---+---+")
+  (format t "~%"))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Função para Escolher Tabuleiro
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun escolha-do-tabuleiro ()
+  "Permite ao usuário escolher entre os tabuleiros disponíveis."
+  (terpri)
+  (format t "Escolha um tabuleiro:~%")
+  (format t "1 - Tabuleiro 1 (Padrão)~%")
+  (format t "2 - Tabuleiro 2 (Obstáculos em linha)~%")
+  (format t "3 - Tabuleiro 3 (Obstáculos diagonais)~%")
+  (terpri)
+  (let ((opcao (read)))
+    (cond
+      ((= opcao 1) (tab1))
+      ((= opcao 2) (tab2))
+      ((= opcao 3) (tab3))
+      (t (format t "Escolha inválida! Tente novamente.~%") (escolha-do-tabuleiro)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Funções que Interagem com o Humano
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun novo-merg (no)
+  "Cria um novo mergulhador no tabuleiro."
+  (let ((pos-x (read (format t "~% => (coluna): Posição X da origem: ")))
+        (pos-y (read (format t "   => (linha): Posição Y da origem: ")))
+        (tabu (escolha-do-tabuleiro)))
+    (if (and (numberp pos-x) (numberp pos-y) ;; valida as coordenadas
+             (coord-valida? pos-x pos-y tabu))
+        (mergulhador
+         (poe-mergulhador pos-x pos-y tabu)
+         (cadr no) ;; id padrão
+         (list pos-x pos-y) ;; origem dos movimentos
+         (push (list pos-x pos-y) (fourth no)) ;; posição atual
+         (fifth no) ;; posições anteriores
+         (sixth no)) ;; (funcall #'f-aval no)))
+        (format t "~A ~% Algo deu errado." (novo-merg no)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Função Principal para Iniciar a Busca
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun iniciar-busca ()
+  "Inicia a busca no tabuleiro escolhido pelo usuário."
+  (let* ((tab (escolha-do-tabuleiro)) ;; Seleciona um tabuleiro com base na escolha do usuário
+         (x 3) (y 3)) ;; Posição inicial do mergulhador
+    (format t "Iniciando busca no tabuleiro escolhido...~%")
+    (imprime-tab tab)
+    ;; Aqui você pode adicionar a lógica para executar a busca no tabuleiro
+    ))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Função Principal para Iniciar o Programa
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun iniciar ()
+  "Função principal para iniciar o programa."
+  (iniciar-busca)) ;; Chama a função iniciar-busca

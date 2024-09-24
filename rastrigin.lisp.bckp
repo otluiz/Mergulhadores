@@ -1,0 +1,27 @@
+;;;-------------------------------------------------------------------------
+;;; Arquivo: rastrigin.lisp
+;;; Autor: Othon Oliveira
+;;; Projeto: Algoritmo Mergulhadores
+;;; Descrição: Funções de benchmark para avaliação do algoritmo
+;;;-------------------------------------------------------------------------
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Função de Benchmark: Rastrigin
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun rastrigin (x)
+  "Função de benchmark Rastrigin. Calcula o valor da função para um vetor X."
+  (let ((A 10)
+        (n (length x)))
+    (+ (* A n)
+       (reduce #'+
+               (mapcar (lambda (xi)
+                         (- (* xi xi) (* A (cos (* 2 pi xi)))))
+                       x)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Outras Funções de Benchmark (se necessário)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Você pode adicionar outras funções de benchmark aqui, conforme necessário.
+
