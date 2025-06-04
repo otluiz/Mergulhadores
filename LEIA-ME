@@ -4,3 +4,5 @@ o mergulhador pode "morrer" sem oxigênio.
 Esta versão do código já implementa o controle de oxigênio e permite
 definir quantos mergulhadores participarão da busca. A ideia de um enxame
 de robôs será explorada no futuro para tornar o algoritmo mais robusto.
+Agora também é possível abrir uma janela em Common Graphics para visualizar
+as posições dos mergulhadores durante a execução do benchmark.

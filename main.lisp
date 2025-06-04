@@ -15,6 +15,9 @@
 ;; Carregar o módulo de benchmark (antes rastrigin)
 (load "benchmark.lisp")
 
+;; Carregar o módulo de interface gráfica opcional
+(load "gui.lisp")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Estrutura para representar um mergulhador
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -70,12 +73,16 @@ TABULEIRO. TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
 ;;;; Função de Busca Utilizando Mergulhadores e Funções de Benchmark
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun buscar-minimo-global (tabuleiro quantidade)
-  "Executa a busca pelo mínimo global utilizando QUANTIDADE de mergulhadores no TABULEIRO."
+(defun buscar-minimo-global (tabuleiro quantidade &optional (visualizar nil))
+  "Executa a busca pelo mínimo global utilizando QUANTIDADE de mergulhadores no TABULEIRO.
+Se VISUALIZAR for verdadeiro, uma janela com Common Graphics exibirá as posições."
   (let ((tentativas 0)
         (melhor-valor most-positive-fixnum)
         (melhor-posicao nil)
         (mergulhadores (inicializar-mergulhadores tabuleiro quantidade)))
+    (when visualizar
+      (mergulhadores-gui:abrir-janela (array-dimension tabuleiro 0))
+      (mergulhadores-gui:atualizar-gui tabuleiro mergulhadores))
     ;; Loop de busca até atingir o número máximo de tentativas
     (loop while (and (< tentativas 1000) mergulhadores)
           do (progn
@@ -99,6 +106,8 @@ TABULEIRO. TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
                    ;; Verifica se mergulhador morreu
                    (when (<= (mergulhador-oxigenio m) 0)
                      (setf (mergulhador-vivo m) nil))))
+               (when visualizar
+                 (mergulhadores-gui:atualizar-gui tabuleiro mergulhadores))
                ;; Checagem de convergência
                (when (< melhor-valor 1e-2)
                  (format t "Mínimo global encontrado na posição ~a com valor ~f após ~d tentativas.~%"
@@ -108,7 +117,9 @@ TABULEIRO. TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
         (format t "Número máximo de tentativas atingido. Melhor valor encontrado: ~f na posição ~a.~%"
                 melhor-valor melhor-posicao)
         (format t "Busca encerrada. Melhor valor encontrado: ~f na posição ~a.~%"
-                melhor-valor melhor-posicao))))
+                melhor-valor melhor-posicao))
+    (when visualizar
+      (mergulhadores-gui:fechar-janela)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Função para Escolher o Tipo de Busca e Espaço de Busca
@@ -141,6 +152,15 @@ TABULEIRO. TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
         q
         20)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Perguntar se deseja visualizar com Common Graphics
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun solicitar-visualizacao ()
+  "Pergunta ao usuário se deseja abrir a janela gráfica."
+  (format t "Deseja visualizar graficamente? (1 = sim, 0 = nao): ")
+  (= (read) 1))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Função Principal para Iniciar o Programa
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -149,6 +169,7 @@ TABULEIRO. TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
   "Função principal para iniciar o programa."
   (let ((tabuleiro (escolher-espaco-de-busca)))
     (if tabuleiro
-        (let ((quantidade (solicitar-quantidade-mergulhadores)))
-          (buscar-minimo-global tabuleiro quantidade))
+        (let ((quantidade (solicitar-quantidade-mergulhadores))
+              (vis (solicitar-visualizacao)))
+          (buscar-minimo-global tabuleiro quantidade vis))
         (format t "Erro ao carregar o espaço de busca. Tente novamente."))))
