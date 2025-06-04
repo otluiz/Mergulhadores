@@ -1,4 +1,6 @@
 os mergulhadores recebem uma quantidade de oxigênio para fazer o mergulho.
 Cada vez que o mergulhador tem sucesso ele ganha oxigênio, caso contrário
 o mergulhador pode "morrer" sem oxigênio.
-Isto foi uma mudança 
+Esta versão do código já implementa o controle de oxigênio e permite
+definir quantos mergulhadores participarão da busca. A ideia de um enxame
+de robôs será explorada no futuro para tornar o algoritmo mais robusto.

@@ -16,6 +16,16 @@
 (load "benchmark.lisp")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; Estrutura para representar um mergulhador
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defstruct mergulhador
+  posicao    ;; Coordenadas atuais
+  valor      ;; Valor da função na posição
+  (oxigenio 5) ;; Quantidade de oxigênio disponível
+  (vivo t))  ;; Indica se o mergulhador ainda pode participar
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Funções para Carregar Tabuleiros e Benchmarks
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -40,50 +50,56 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Função para Inicializar Mergulhadores no Espaço de Busca
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun inicializar-mergulhadores (tabuleiro)
-  "Inicializa 20 mergulhadores em posições aleatórias válidas no TABULEIRO.
-TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
+(defun inicializar-mergulhadores (tabuleiro &optional (quantidade 20))
+  "Inicializa QUANTIDADE mergulhadores em posições aleatórias válidas no
+TABULEIRO. TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
   (let (mergulhadores)
-    (dotimes (i 20) ;; 20 mergulhadores
+    (dotimes (i quantidade)
       (let ((posicao (loop
                        with x = (random (array-dimension tabuleiro 0))
                        with y = (random (array-dimension tabuleiro 1))
                        until (pos-valida? tabuleiro x y)
                        finally (return (list x y)))))
-        (push (list posicao (rastrigin posicao)) mergulhadores)))
+        (push (make-mergulhador
+               :posicao posicao
+               :valor (rastrigin posicao))
+              mergulhadores)))
     mergulhadores))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Função de Busca Utilizando Mergulhadores e Funções de Benchmark
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun buscar-minimo-global (tabuleiro)
-  "Executa a busca pelo mínimo global utilizando 20 mergulhadores no TABULEIRO."
+(defun buscar-minimo-global (tabuleiro quantidade)
+  "Executa a busca pelo mínimo global utilizando QUANTIDADE de mergulhadores no TABULEIRO."
   (let ((tentativas 0)
         (melhor-valor most-positive-fixnum)
         (melhor-posicao nil)
-        (mergulhadores (inicializar-mergulhadores tabuleiro)))
+        (mergulhadores (inicializar-mergulhadores tabuleiro quantidade)))
     ;; Loop de busca até atingir o número máximo de tentativas
-    (loop while (< tentativas 1000) ;; 1000 tentativas
+    (loop while (and (< tentativas 1000) mergulhadores)
           do (progn
                (incf tentativas)
-               (dolist (mergulhador mergulhadores)
-                 (let* ((posicao (car mergulhador))
-                        (valor (cadr mergulhador))
-                        (nova-posicao (loop
-                                        with x = (car posicao)
-                                        with y = (cadr posicao)
-                                        until (pos-valida? tabuleiro x y)
-                                        finally (return (list x y))))
+               (setf mergulhadores
+                     (remove-if-not #'mergulhador-vivo mergulhadores))
+               (dolist (m mergulhadores)
+                 (let* ((posicao (mergulhador-posicao m))
+                        (nova-posicao (mover-randomico tabuleiro posicao))
                         (novo-valor (rastrigin nova-posicao)))
-                   ;; Se encontrar um valor melhor, atualizar
+                   ;; Se encontrar valor melhor, atualizar global e oxigênio
                    (when (< novo-valor melhor-valor)
-                     (setf melhor-valor novo-valor)
-                     (setf melhor-posicao nova-posicao))
-                   ;; Atualizar posição e valor do mergulhador
-                   (setf (car mergulhador) nova-posicao)
-                   (setf (cadr mergulhador) novo-valor)))
-               ;; Verificar se o valor é próximo o suficiente do mínimo global
+                     (setf melhor-valor novo-valor
+                           melhor-posicao nova-posicao)
+                     (incf (mergulhador-oxigenio m)))
+                   ;; Caso contrário, consumir oxigênio
+                   (decf (mergulhador-oxigenio m))
+                   ;; Atualizar posição/valor
+                   (setf (mergulhador-posicao m) nova-posicao
+                         (mergulhador-valor m) novo-valor)
+                   ;; Verifica se mergulhador morreu
+                   (when (<= (mergulhador-oxigenio m) 0)
+                     (setf (mergulhador-vivo m) nil))))
+               ;; Checagem de convergência
                (when (< melhor-valor 1e-2)
                  (format t "Mínimo global encontrado na posição ~a com valor ~f após ~d tentativas.~%"
                          melhor-posicao melhor-valor tentativas)
@@ -111,7 +127,19 @@ TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
      ((= opcao 2)
       (carrega-benchmark "benchmark.lisp"))
      (t (format t "Escolha inválida! Tente novamente.~%")
-        (escolher-espaco-de-busca)))))
+       (escolher-espaco-de-busca)))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;; Função para Solicitar Quantidade de Mergulhadores
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun solicitar-quantidade-mergulhadores ()
+  "Pergunta ao usuário quantos mergulhadores deseja utilizar."
+  (format t "Digite a quantidade de mergulhadores (padrão 20): ")
+  (let ((q (read)))
+    (if (and (integerp q) (> q 0))
+        q
+        20)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;; Função Principal para Iniciar o Programa
@@ -121,5 +149,6 @@ TABULEIRO deve ser uma matriz 2D ou um array multidimensional."
   "Função principal para iniciar o programa."
   (let ((tabuleiro (escolher-espaco-de-busca)))
     (if tabuleiro
-        (buscar-minimo-global tabuleiro)
+        (let ((quantidade (solicitar-quantidade-mergulhadores)))
+          (buscar-minimo-global tabuleiro quantidade))
         (format t "Erro ao carregar o espaço de busca. Tente novamente."))))
